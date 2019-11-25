@@ -1,0 +1,24 @@
+version: "3"
+services:
+  opcua-python-server:
+    container_name: opc-server
+    build:
+      context: .
+      dockerfile: python-opcua.Dockerfile
+    volumes:
+      - ./server:/usr/opc
+      # - ./01-opcua-asyncio:/usr/opc/freeopcua
+    command: tail -f /dev/null
+    ports:
+      - 4880:4881
+  opcua-python-client:
+    container_name: opc-client
+    build:
+      context: .
+      dockerfile: python-opcua.Dockerfile
+    volumes:
+      - ./client:/usr/opc
+      # - ./01-opcua-asyncio:/usr/opc/freeopcua
+    command: tail -f /dev/null
+    ports:
+      - 4990:4991
