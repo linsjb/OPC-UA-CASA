@@ -5,7 +5,8 @@ WORKDIR /usr/opc/src
 RUN apt-get update && apt-get install -y \
     zsh \
     wget \
-    git
+    git \
+    apt-utils
 
 COPY python-requirements.txt ./
 RUN pip install --no-cache-dir -r python-requirements.txt
