@@ -6,7 +6,7 @@ SERVER_IMAGE_NAME := freeopcua_debian_server
 CLIENT_CONTAINER_NAME := opc-client
 CLIENT_FILE_SOURCE := ${CURDIR}/client/src
 CLIENT_FILE_TARGET := opc-client
-CLIENTIMG := {$SERVER_IMAGE_NAME}
+CLIENT_IMG := {$SERVER_IMAGE_NAME}
 
 build-server-image:
 	docker build -t ${SERVER_IMAGE_NAME} .
@@ -14,10 +14,9 @@ build-server-image:
 build-server-container:
 	@docker run -it -d \
 		--name ${SERVER_CONTAINER_NAME} \
-		--mount \
-			type=bind, \
-			source=${SERVER_FILE_SOURCE}, \
-			target=/${SERVER_FILE_TARGET} ${SERVER_IMAGE_NAME}
+		-p 4880:4881 \
+		--mount type=bind,source=${SERVER_FILE_SOURCE},\target=/${SERVER_FILE_TARGET} \
+		${SERVER_IMAGE_NAME} \
 
 	@echo "${SERVER_CONTAINER_NAME} container created"
 	@docker ps
@@ -38,10 +37,8 @@ enter-server:
 build-client-container:
 	@docker run -it -d \
 		--name ${CLIENT_CONTAINER_NAME} \
-		--mount \
-			type=bind, \
-			source=${CLIENT_FILE_SOURCE}, \
-			target=/${CLIENT_FILE_TARGET} ${CLIENTIMG}
+		--mount type=bind,source=${CLIENT_FILE_SOURCE},target=/${CLIENT_FILE_TARGET} \
+		${CLIENT_IMG}
 
 	@echo "${CLIENT_CONTAINER_NAME} docker container created"
 	@docker ps

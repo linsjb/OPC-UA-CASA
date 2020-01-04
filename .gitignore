@@ -1,3 +1,6 @@
 
 01-opcua-asyncio
 .vscode
+__pycache__
+tests
+.DS_store

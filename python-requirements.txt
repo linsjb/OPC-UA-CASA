@@ -1,3 +1,4 @@
 asyncua
 # opcua-client
 # IPython
+matplotlib
