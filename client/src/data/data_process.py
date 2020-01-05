@@ -2,73 +2,91 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rc
+import random
+
+DECIMAL_PLACES = 2
+
+client_data = list()
+server_data = list()
 
 
-client_data = {}
-server_seq_mean = {}
-server_sort_mean = {}
+def new_server(server):
+    client_data.append({
+        "server": server['name'],
+        "data": list()
+    })
 
-server_data = {
-    "seq": server_seq_mean,
-    "sort": server_sort_mean
-}
-
-gathered_data = {
-    "client": client_data,
-    "server": server_data
-}
-
-data = {}
+    server_data.append({
+        "server": server['name'],
+        "data": list()
+    })
 
 
-def client_mean(size, payload):
-    current_client_rtt_mean = list()
-    current_client_rtt_mean = statistics.mean(payload)
-    client_data[size] = current_client_rtt_mean
+def client_mean(server, size, payload):
+    data_point = {}
+
+    data_point['size'] = size
+    data_point['time'] = str(round(statistics.mean(payload), 2))
+
+    client_data[-1]['data'].append(data_point)
 
 
-def server_mean(size, payload):
-    current_server_seq_mean = list()
-    current_server_sort_mean = list()
-    current_server_seq_mean = statistics.mean(payload['seq'])
-    current_server_sort_mean = statistics.mean(payload['sort'])
+def server_mean(server, size, payload):
+    server_time_types = {
+        "seq": str(round(statistics.mean(payload['seq']), DECIMAL_PLACES)),
+        "sort": str(round(statistics.mean(payload['sort']), DECIMAL_PLACES))
+    }
 
-    server_seq_mean[size] = current_server_seq_mean
-    server_sort_mean[size] = current_server_sort_mean
+    data_point = {}
+    data_point['size'] = size
+    data_point['time'] = server_time_types
+
+    server_data[-1]['data'].append(data_point)
 
 
-def server(name):
-    data[name] = gathered_data
-
-
-def gather_data(type, size, payload):
+def gather_data(type, server, size, payload):
     switcher = {
         "CLIENT_MEAN": client_mean,
         "SERVER_MEAN": server_mean
     }
     function = switcher.get(type)
-    function(size, payload)
+    function(server, size, payload)
 
 
 def print_result():
-    print(data)
+    print('\n\n=== Results ===')
+    print(f'Client data: {client_data}')
+    print(f'Server data: {server_data}')
+
+
+def test():
+    for data in client_data:
+        for sett in data['data']:
+            print(sett['size'])
 
 
 def plot_client():
     plt.close()
-    # evenly sampled time at 200ms intervals
-
-    t = np.arange(0., 5., 0.2)
-
-    # red dashes, blue squares and green triangles
+    colors = ['r', 'g', 'b']
 
     plt.title('Client RTT for OPC-UA load test')
     plt.ylabel('Client RTT (ms)')
     plt.xlabel('Data size')
+    plt.grid(True)
 
-    plt.plot(t, t**2.4, 'r', label='RpI 1')
-    plt.plot(t, t**2, 'g', label='RpI 3')
-    plt.plot(t, t**1.2, 'b', label='Ref. system')
+    for data_block in client_data:
+        x_values = list()
+        y_values = list()
+        for data_set in data_block['data']:
+            x_values.append(data_set['size'])
+            y_values.append(float(data_set['time']))
+        color = random.choice(colors)
+        plt.plot(x_values, y_values, linestyle='-',
+                 marker='o', color=color, label=data_block['server'])
+
+    # plt.plot(x, y, 'bo', label='AAA',)
+    # plt.plot(t, t**2, 'b', label='BBB')
+    # plt.plot(t, t**1.2, 'b', label='Ref. system')
 
     plt.legend()
     plt.savefig('client_plot.png')

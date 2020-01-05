@@ -10,64 +10,66 @@ from data import data_process
 
 async def serverMethodCall(args):
     for data_size in args['data_sizes']:
-        for data_range in args['data_ranges']:
+        print(
+            f'\n\nServer: {args["server"]["server"]} ({args["server"]["name"]}), Data size: {data_size}, Client iterations: {args["client_iterations"]}'
+        )
+        print('--------------')
+
+        client_rtt_data = list()
+        server_rtt_data = {}
+        server_rtt_seq_data = list()
+        server_rtt_sort_data = list()
+
+        for i in range(args['client_iterations']):
+            time_start = time.time()
+
+            await args['objects'].call_method(
+                "2:random_sort",
+                data_size,
+                args['data_range']
+            )
+
+            remote_data_pool = await args['data_pool'].get_value()
+            remote_server_rtt = await args['server_rtt'].get_value()
+
+            time_end = time.time()
+
+            client_rtt = (time_end - time_start)*1000
+
+            client_rtt_data.append(client_rtt)
+
+            server_rtt_seq_data.append(remote_server_rtt[0])
+            server_rtt_sort_data.append(remote_server_rtt[1])
+
             print(
-                f'\nServer: {args["server"]["server"]}, Data size: {data_size}, Data range: {data_range}, Client iterations: {args["client_iterations"]}')
-            print('--------------')
+                f'Client RTT on iteration {i+1} = {str(round(client_rtt, 2))} ms'
+            )
 
-            data = {}
-            client_rtt_data = list()
-            server_rtt_data = {}
-            server_rtt_seq_data = list()
-            server_rtt_sort_data = list()
+        print(
+            f'Mean value: {str(round(statistics.mean(client_rtt_data), 2))}'
+        )
 
-            current_data_size = str(data_size) + "," + str(data_range)
+        data_process.gather_data(
+            "CLIENT_MEAN", args['server']['name'], data_size, client_rtt_data)
 
-            for i in range(args['client_iterations']):
-                time_start = time.time()
+        server_rtt_data['seq'] = server_rtt_seq_data
+        server_rtt_data['sort'] = server_rtt_sort_data
 
-                await args['objects'].call_method(
-                    "2:random_sort",
-                    data_size,
-                    data_range
-                )
-
-                remote_data_pool = await args['data_pool'].get_value()
-                remote_server_rtt = await args['server_rtt'].get_value()
-
-                time_end = time.time()
-
-                client_rtt = (time_end - time_start)*1000
-
-                client_rtt_data.append(client_rtt)
-                server_rtt_seq_data.append(remote_server_rtt[0])
-                server_rtt_sort_data.append(remote_server_rtt[1])
-
-                print(f'Client RTT on iteration {i+1} = {client_rtt} ms')
-
-            data_process.gather_data(
-                "CLIENT_MEAN", current_data_size, client_rtt_data)
-
-            server_rtt_data['seq'] = server_rtt_seq_data
-            server_rtt_data['sort'] = server_rtt_sort_data
-
-            data_process.gather_data(
-                'SERVER_MEAN', current_data_size, server_rtt_data)
-
-            data_process.server(args['server']['server'])
+        data_process.gather_data(
+            'SERVER_MEAN', args['server']['name'], data_size, server_rtt_data)
 
 
 async def init_server():
-
     servers = [{
         "server": 'opc-server:4881',
         "name": "Reference system"
     }, {
-        "server": 'opc-server:4881',
-        "name": "RPi 1"
+        "server": '192.168.1.23:4880',
+        "name": "RPi 3"
     }]
 
     for server in servers:
+        data_process.new_server(server)
         async with Client(url='opc.tcp://' + server['server']) as client:
             root_object = "0:Objects"
             root_node = client.get_root_node()
@@ -91,27 +93,29 @@ async def init_server():
             ])
 
             data_sizes = [
-                10000
+                100000,
+                250000,
+                500000,
+                1000000
             ]
 
-            data_ranges = [
-                100
-            ]
+            data_range = 10000
 
             args = {
                 'objects': objects,
                 'server_rtt': server_rtt,
                 'data_pool': data_pool,
                 'client_iterations': int(sys.argv[1]),
-                'data_ranges': data_ranges,
                 'data_sizes': data_sizes,
+                'data_range': data_range,
                 'server': server
             }
 
             await serverMethodCall(args)
-            data_process.print_result()
-            # data_process.plot_client()
-            # data_process.plot_server()
+
+    # data_process.print_result()
+    data_process.plot_client()
+    # data_process.plot_server()
 
 
 if __name__ == '__main__':

@@ -16,7 +16,8 @@ build-server-container:
 		--name ${SERVER_CONTAINER_NAME} \
 		-p 4880:4881 \
 		--mount type=bind,source=${SERVER_FILE_SOURCE},\target=/${SERVER_FILE_TARGET} \
-		${SERVER_IMAGE_NAME} \
+		--network opc-ua-casa_default \
+		${SERVER_IMAGE_NAME}
 
 	@echo "${SERVER_CONTAINER_NAME} container created"
 	@docker ps
