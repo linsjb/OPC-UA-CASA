@@ -1,0 +1,13 @@
+servers:
+    - name: 
+      ip: 
+      port: 
+
+  # List of different data sizes
+  data_sizes:
+    
+  # Single value for data range.
+  # This is the range the generation of the random
+  # numbers that will fill the array
+  data_range: 
+  

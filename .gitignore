@@ -2,8 +2,7 @@
 01-opcua-asyncio
 .vscode
 __pycache__
-tests
 .DS_store
-*.png
 .swo
 .swp
+configuration.yml

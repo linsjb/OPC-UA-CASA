@@ -6,17 +6,17 @@ import enum
 import time
 import statistics
 from data import data_process
+import yaml
 
 
 async def serverMethodCall(args):
     for data_size in args['data_sizes']:
         print(
-            f'\n\nServer: {args["server"]["server"]} ({args["server"]["name"]}), Data size: {data_size}, Client iterations: {args["client_iterations"]}'
+            f'\n\nServer: {args["server"]["ip"]} ({args["server"]["name"]}), Data size: {data_size}, Client iterations: {args["client_iterations"]}'
         )
         print('--------------')
 
         client_rtt_data = list()
-        server_rtt_data = {}
         server_rtt_seq_data = list()
         server_rtt_sort_data = list()
 
@@ -46,31 +46,26 @@ async def serverMethodCall(args):
             )
 
         print(
-            f'Mean value: {str(round(statistics.mean(client_rtt_data), 2))}'
+            f'Mean value: {str(round(statistics.mean(client_rtt_data), 2))} ms'
         )
 
         data_process.gather_data(
-            "CLIENT_MEAN", args['server']['name'], data_size, client_rtt_data)
-
-        server_rtt_data['seq'] = server_rtt_seq_data
-        server_rtt_data['sort'] = server_rtt_sort_data
+            "CLIENT", args['server']['name'], data_size, client_rtt_data)
 
         data_process.gather_data(
-            'SERVER_MEAN', args['server']['name'], data_size, server_rtt_data)
+            'SERVER', args['server']['name'], data_size, {
+                "seq": server_rtt_seq_data,
+                "sort": server_rtt_sort_data
+            })
 
 
 async def init_server():
-    servers = [{
-        "server": 'opc-server:4881',
-        "name": "Reference system"
-    }, {
-        "server": '192.168.1.23:4880',
-        "name": "RPi 3"
-    }]
+    with open(r'../configuration.yml') as config_file:
+        config = yaml.load(config_file, Loader=yaml.FullLoader)
 
-    for server in servers:
+    for server in config['servers']:
         data_process.new_server(server)
-        async with Client(url='opc.tcp://' + server['server']) as client:
+        async with Client(url='opc.tcp://' + str(server['ip']) + ':' + str(server['port'])) as client:
             root_object = "0:Objects"
             root_node = client.get_root_node()
             namespace = await client.get_namespace_index("OPC-UA-CASA")
@@ -92,30 +87,19 @@ async def init_server():
                 f"{namespace}:data_pool"
             ])
 
-            data_sizes = [
-                100000,
-                250000,
-                500000,
-                1000000
-            ]
-
-            data_range = 10000
-
             args = {
                 'objects': objects,
                 'server_rtt': server_rtt,
                 'data_pool': data_pool,
                 'client_iterations': int(sys.argv[1]),
-                'data_sizes': data_sizes,
-                'data_range': data_range,
+                'data_sizes': config['data_sizes'],
+                'data_range': config['data_range'],
                 'server': server
             }
 
             await serverMethodCall(args)
 
-    # data_process.print_result()
-    data_process.plot_client()
-    # data_process.plot_server()
+    data_process.compile_result()
 
 
 if __name__ == '__main__':

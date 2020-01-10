@@ -77,7 +77,6 @@ async def init_server(endpoint, nsp):
     await server.start()
 
     try:
-        print(namespace)
         print("OPC-UA server started")
         while True:
             await asyncio.sleep(1)

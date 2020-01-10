@@ -1,13 +1,16 @@
 import statistics
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import rc
 import random
+import csv
+
 
 DECIMAL_PLACES = 2
+FILE_LOCATION = '../generated_files/'
 
 client_data = list()
 server_data = list()
+server_mena_data = list()
 
 
 def new_server(server):
@@ -22,19 +25,23 @@ def new_server(server):
     })
 
 
-def client_mean(server, size, payload):
+def client_data_processing(server, size, payload):
     data_point = {}
 
     data_point['size'] = size
-    data_point['time'] = str(round(statistics.mean(payload), 2))
+    data_point['time'] = float(round(statistics.mean(payload), 2))
 
     client_data[-1]['data'].append(data_point)
 
 
-def server_mean(server, size, payload):
+def server_data_processing(server, size, payload):
+    """
+    Combining the gathered server data into an object list.
+    """
+
     server_time_types = {
-        "seq": str(round(statistics.mean(payload['seq']), DECIMAL_PLACES)),
-        "sort": str(round(statistics.mean(payload['sort']), DECIMAL_PLACES))
+        "seq": float(round(statistics.mean(payload['seq']), DECIMAL_PLACES)),
+        "sort": float(round(statistics.mean(payload['sort']), DECIMAL_PLACES))
     }
 
     data_point = {}
@@ -46,80 +53,129 @@ def server_mean(server, size, payload):
 
 def gather_data(type, server, size, payload):
     switcher = {
-        "CLIENT_MEAN": client_mean,
-        "SERVER_MEAN": server_mean
+        "CLIENT": client_data_processing,
+        "SERVER": server_data_processing
     }
     function = switcher.get(type)
     function(server, size, payload)
 
 
-def print_result():
-    print('\n\n=== Results ===')
-    print(f'Client data: {client_data}')
-    print(f'Server data: {server_data}')
+def server_type_average(server_data):
+    """
+    Takes the gathered server data and takes the average value of the two different types.
+    """
 
+    server_avg_data = list()
 
-def test():
-    for data in client_data:
-        for sett in data['data']:
-            print(sett['size'])
+    for data_block in server_data:
+        comb_seq_data = list()
+        comb_sort_data = list()
+
+        for data_set in data_block['data']:
+            comb_seq_data.append(data_set['time']['seq'])
+            comb_sort_data.append(data_set['time']['sort'])
+
+        avg_sort_percentage = float(round(statistics.mean(comb_seq_data), DECIMAL_PLACES)) / float(
+            round(statistics.mean(comb_sort_data), DECIMAL_PLACES))
+
+        avg_seq_percentare = 100 - avg_sort_percentage
+
+        server_avg_data.append({
+            "server": data_block['server'],
+            "data": {
+                "seq": avg_sort_percentage,
+                "sort": avg_seq_percentare
+            }
+        })
+
+    return server_avg_data
 
 
 def plot_client():
     plt.close()
-    colors = ['r', 'g', 'b']
+    colors = ['#2d7f5e', '#78909C', '#FF7043', '#D32F2F', '#1E88E5', '#8E24AA']
 
     plt.title('Client RTT for OPC-UA load test')
     plt.ylabel('Client RTT (ms)')
     plt.xlabel('Data size')
     plt.grid(True)
 
+    x_labels = list()
+
     for data_block in client_data:
         x_values = list()
         y_values = list()
+
+        color_value = random.choice(colors)
+        colors.remove(color_value)
+
         for data_set in data_block['data']:
             x_values.append(data_set['size'])
             y_values.append(float(data_set['time']))
-        color = random.choice(colors)
-        plt.plot(x_values, y_values, linestyle='-',
-                 marker='o', color=color, label=data_block['server'])
 
-    # plt.plot(x, y, 'bo', label='AAA',)
-    # plt.plot(t, t**2, 'b', label='BBB')
-    # plt.plot(t, t**1.2, 'b', label='Ref. system')
+        plt.plot(x_values, y_values, linestyle='-', marker='o',
+                 color=color_value, linewidth=2, label=data_block['server'])
 
+    plt.xticks(rotation=-45)
+    plt.margins(0.5)
+    plt.subplots_adjust(bottom=0.2)
     plt.legend()
-    plt.savefig('client_plot.png')
+    plt.savefig(FILE_LOCATION + 'client_plot.png')
 
 
-def plot_server():
+def plot_server(server_data):
     plt.close()
-    # y-axis in bold
-    rc('font', weight='bold')
 
-    # Values of each group
-    randomSeq = [40, 30, 10]
-    sortSeq = [60, 50, 20]
-
-    # The position of the bars on the x-axis
-    r = [0, 1, 2]
-
-    # Names of group and bar width
-    names = ['RPi 1', 'RPi 3', 'Ref. system']
     barWidth = 1
-
-    # Create brown bars
-    plt.bar(r, randomSeq, color='#7f6d5f', edgecolor='white',
-            width=barWidth, label='Random operation')
-    # Create green bars (middle), on top of the firs ones
-    plt.bar(r, sortSeq, bottom=randomSeq, color='#2d7f5e',
-            edgecolor='white', width=barWidth, label='Sort operation')
-
-    # Custom X axis
-    plt.xticks(r, names, fontweight='bold')
+    plot_data = {
+        "systems": list(),
+        "seq": list(),
+        "sort": list()
+    }
     plt.title('Server RTT devided by action')
-    plt.ylabel('RTT (ms)')
+    plt.ylabel('RTT (%)')
+    plt.xlabel('Systems')
 
-    # Show graphic
+    for data_block in server_data:
+        plot_data['systems'].append(data_block['server'])
+        plot_data['seq'].append(float(data_block['data']['seq']))
+        plot_data['sort'].append(float(data_block['data']['sort']))
+
+    plt.xticks(np.arange(len(plot_data)),
+               plot_data['systems'], fontweight='bold')
+
+    # Create bottom bars
+    plt.bar(np.arange(len(plot_data)), plot_data['seq'], color='#7f6d5f', edgecolor='#90A4AE',
+            width=barWidth, label='Random operation')
+
+    # Create top bar on top of the bottom one
+    plt.bar(np.arange(len(plot_data)), plot_data['sort'], bottom=plot_data['seq'], color='#1976D2',
+            edgecolor='#90A4AE', width=barWidth, label='Sort operation')
+
     plt.legend()
-    plt.savefig('server_plot.png')
+    plt.savefig(FILE_LOCATION + 'server_plot.png')
+
+
+def server_table():
+    """
+    Extract data from the server data set and devide it into n csv files.
+    The files has the server name given in server list.
+    """
+
+    for data_block in server_data:
+        with open(FILE_LOCATION + data_block['server'] + '_result.csv', 'w') as csvfile:
+            file_writer = csv.writer(csvfile, delimiter=',')
+            file_writer.writerow(["Data size", "List generation", "List sort"])
+
+            for data_set in data_block['data']:
+                file_writer.writerow([
+                    data_set['size'],
+                    str(data_set['time']['seq']) + " ms",
+                    str(data_set['time']['sort']) + " ms"
+                ])
+
+
+def compile_result():
+    plot_server(server_type_average(server_data))
+    plot_client()
+    server_table()
