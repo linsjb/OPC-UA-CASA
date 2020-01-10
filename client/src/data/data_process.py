@@ -25,39 +25,34 @@ def new_server(server):
     })
 
 
-def client_data_processing(server, size, payload):
-    data_point = {}
-
-    data_point['size'] = size
-    data_point['time'] = float(round(statistics.mean(payload), 2))
-
-    client_data[-1]['data'].append(data_point)
+def client_data_processing(size, payload):
+    client_data[-1]['data'].append({
+        "size": size,
+        "time": float(round(statistics.mean(payload), 2))
+    })
 
 
-def server_data_processing(server, size, payload):
+def server_data_processing(size, payload):
     """
     Combining the gathered server data into an object list.
     """
 
-    server_time_types = {
-        "seq": float(round(statistics.mean(payload['seq']), DECIMAL_PLACES)),
-        "sort": float(round(statistics.mean(payload['sort']), DECIMAL_PLACES))
-    }
-
-    data_point = {}
-    data_point['size'] = size
-    data_point['time'] = server_time_types
-
-    server_data[-1]['data'].append(data_point)
+    server_data[-1]['data'].append({
+        "size": size,
+        "time": {
+            "seq": float(round(statistics.mean(payload['seq']), DECIMAL_PLACES)),
+            "sort": float(round(statistics.mean(payload['sort']), DECIMAL_PLACES))
+        }
+    })
 
 
-def gather_data(type, server, size, payload):
+def gather_data(type, size, payload):
     switcher = {
         "CLIENT": client_data_processing,
         "SERVER": server_data_processing
     }
     function = switcher.get(type)
-    function(server, size, payload)
+    function(size, payload)
 
 
 def server_type_average(server_data):
@@ -78,13 +73,13 @@ def server_type_average(server_data):
         avg_sort_percentage = float(round(statistics.mean(comb_seq_data), DECIMAL_PLACES)) / float(
             round(statistics.mean(comb_sort_data), DECIMAL_PLACES))
 
-        avg_seq_percentare = 100 - avg_sort_percentage
+        avg_seq_percentage = 100 - avg_sort_percentage
 
         server_avg_data.append({
             "server": data_block['server'],
             "data": {
-                "seq": avg_sort_percentage,
-                "sort": avg_seq_percentare
+                "seq": avg_seq_percentage,
+                "sort": avg_sort_percentage
             }
         })
 
@@ -145,12 +140,12 @@ def plot_server(server_data):
                plot_data['systems'], fontweight='bold')
 
     # Create bottom bars
-    plt.bar(np.arange(len(plot_data)), plot_data['seq'], color='#7f6d5f', edgecolor='#90A4AE',
+    plt.bar(np.arange(len(plot_data)), plot_data['seq'], color='#FF5252', edgecolor='#424242',
             width=barWidth, label='Random operation')
 
     # Create top bar on top of the bottom one
-    plt.bar(np.arange(len(plot_data)), plot_data['sort'], bottom=plot_data['seq'], color='#1976D2',
-            edgecolor='#90A4AE', width=barWidth, label='Sort operation')
+    plt.bar(np.arange(len(plot_data)), plot_data['sort'], bottom=plot_data['seq'], color='#536DFE',
+            edgecolor='#424242', width=barWidth, label='Sort operation')
 
     plt.legend()
     plt.savefig(FILE_LOCATION + 'server_plot.png')

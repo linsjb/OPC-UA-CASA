@@ -50,13 +50,12 @@ async def serverMethodCall(args):
         )
 
         data_process.gather_data(
-            "CLIENT", args['server']['name'], data_size, client_rtt_data)
+            "CLIENT", data_size, client_rtt_data)
 
-        data_process.gather_data(
-            'SERVER', args['server']['name'], data_size, {
-                "seq": server_rtt_seq_data,
-                "sort": server_rtt_sort_data
-            })
+        data_process.gather_data('SERVER', data_size, {
+            "seq": server_rtt_seq_data,
+            "sort": server_rtt_sort_data
+        })
 
 
 async def init_server():
