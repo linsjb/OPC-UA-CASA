@@ -9,7 +9,7 @@ from data import data_process
 import yaml
 
 
-async def serverMethodCall(args):
+async def server_method_call(args):
     for data_size in args['data_sizes']:
         print(
             f'\n\nServer: {args["server"]["ip"]} ({args["server"]["name"]}), Data size: {data_size}, Client iterations: {args["client_iterations"]}'
@@ -96,7 +96,7 @@ async def init_server():
                 'server': server
             }
 
-            await serverMethodCall(args)
+            await server_method_call(args)
 
     data_process.compile_result()
 
