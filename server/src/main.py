@@ -3,9 +3,10 @@ from asyncua import ua, Server, uamethod
 import datetime
 import random
 import time
+import yaml
 
 
-class ServerTests:
+class Server_tests:
     def __init__(self, server_rtt, data_pool):
         self.server_rtt = server_rtt
         self.data_pool = data_pool
@@ -38,53 +39,56 @@ class ServerTests:
         print(f'Seq time: {sequence_delta}, Sort time: {sort_delta}')
 
 
-async def init_server(endpoint, nsp):
-    server = Server()
-    await server.init()
-    server.set_endpoint(endpoint)
+async def init_server():
+    with open(r'../configuration.yml') as config_file:
+        config = yaml.load(config_file, Loader=yaml.FullLoader)
 
-    namespace = await server.register_namespace(nsp)
-    root_node = server.get_objects_node()
-    objects = await root_node.add_object(namespace, "BaseObjects")
+        server = Server()
+        await server.init()
+        server.set_endpoint(
+            "opc.tcp://" + config['host'] + ":" + str(config['port']))
 
-    server_rtt = await objects.add_variable(
-        namespace,
-        "server_rtt",
-        None
-    )
+        namespace = await server.register_namespace(config['namespace'])
+        root_node = server.get_objects_node()
+        objects = await root_node.add_object(namespace, "BaseObjects")
 
-    data_pool = await objects.add_variable(
-        namespace,
-        "data_pool",
-        None
-    )
+        server_rtt = await objects.add_variable(
+            namespace,
+            "server_rtt",
+            None
+        )
 
-    await server_rtt.set_writable()
-    await data_pool.set_writable()
+        data_pool = await objects.add_variable(
+            namespace,
+            "data_pool",
+            None
+        )
 
-    server_tests = ServerTests(server_rtt, data_pool)
+        await server_rtt.set_writable()
+        await data_pool.set_writable()
 
-    server.link_method(root_node, server_tests.random_sort)
+        server_tests = Server_tests(server_rtt, data_pool)
 
-    random_sort_method = await objects.add_method(
-        namespace,
-        "random_sort",
-        server_tests.random_sort,
-        [ua.VariantType.Int64, ua.VariantType.Int64],
-        [ua.VariantType.Int64]
-    )
+        server.link_method(root_node, server_tests.random_sort)
 
-    await server.start()
+        random_sort_method = await objects.add_method(
+            namespace,
+            "random_sort",
+            server_tests.random_sort,
+            [ua.VariantType.Int64, ua.VariantType.Int64],
+            [ua.VariantType.Int64]
+        )
 
-    try:
-        print("OPC-UA server started")
-        while True:
-            await asyncio.sleep(1)
-    finally:
-        await server.stop()
+        await server.start()
+
+        try:
+            print("OPC-UA server started")
+            # while True:
+            #     await asyncio.sleep(1)
+        finally:
+            await server.stop()
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(init_server(
-        'opc.tcp://opc-server:4881', 'OPC-UA-CASA'))
+    loop.run_until_complete(init_server())
     loop.close()
