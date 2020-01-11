@@ -46,7 +46,7 @@ async def server_method_call(args):
             )
 
         print(
-            f'Mean value: {str(round(statistics.mean(client_rtt_data), 2))} ms'
+            f'Average value: {str(round(statistics.mean(client_rtt_data), 2))} ms'
         )
 
         data_process.gather_data(

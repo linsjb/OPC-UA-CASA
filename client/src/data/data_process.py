@@ -90,12 +90,7 @@ def plot_client():
     plt.close()
     colors = ['#2d7f5e', '#78909C', '#FF7043', '#D32F2F', '#1E88E5', '#8E24AA']
 
-    plt.title('Client RTT for OPC-UA load test')
-    plt.ylabel('Client RTT (ms)')
-    plt.xlabel('Data size')
-    plt.grid(True)
-
-    x_labels = list()
+    f, plot = plt.subplots(1)
 
     for data_block in client_data:
         x_values = list()
@@ -108,13 +103,21 @@ def plot_client():
             x_values.append(data_set['size'])
             y_values.append(float(data_set['time']))
 
-        plt.plot(x_values, y_values, linestyle='-', marker='o',
-                 color=color_value, linewidth=2, label=data_block['server'])
+        plot.plot(x_values, y_values, linestyle='-', marker='o',
+                  color=color_value, linewidth=2, label=data_block['server'])
 
-    plt.xticks(rotation=-45)
+    plt.title('OPC-UA client load test RTT')
+    plt.ylabel('Client RTT (ms)')
+    plt.xlabel('Data size')
+
+    plt.grid(True)
+    plt.autoscale(False)
     plt.margins(0.5)
     plt.subplots_adjust(bottom=0.2)
     plt.legend()
+    plt.xticks(rotation=45)
+    plot.set_xlim(xmin=min(x_values))
+
     plt.savefig(FILE_LOCATION + 'client_plot.png')
 
 

@@ -83,8 +83,8 @@ async def init_server():
 
         try:
             print("OPC-UA server started")
-            # while True:
-            #     await asyncio.sleep(1)
+            while True:
+                await asyncio.sleep(1)
         finally:
             await server.stop()
 
