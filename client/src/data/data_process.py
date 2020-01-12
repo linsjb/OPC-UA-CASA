@@ -139,7 +139,6 @@ def plot_server(server_data):
         plot_data['seq'].append(float(data_block['data']['seq']))
         plot_data['sort'].append(float(data_block['data']['sort']))
 
-    print(plot_data)
     plt.xticks(np.arange(len(plot_data)),
                plot_data['systems'])
 

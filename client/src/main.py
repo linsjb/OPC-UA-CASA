@@ -26,7 +26,8 @@ async def server_method_call(args):
             await args['objects'].call_method(
                 "2:random_sort",
                 data_size,
-                args['data_range']
+                args['data_range']['min'],
+                args['data_range']['max']
             )
 
             remote_data_pool = await args['data_pool'].get_value()
@@ -92,7 +93,10 @@ async def init_server():
                 'data_pool': data_pool,
                 'client_iterations': int(sys.argv[1]),
                 'data_sizes': config['data_sizes'],
-                'data_range': config['data_range'],
+                'data_range': {
+                    'min': config['data_range']['min'],
+                    'max': config['data_range']['max']
+                },
                 'server': server
             }
 

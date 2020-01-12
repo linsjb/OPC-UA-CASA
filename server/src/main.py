@@ -12,13 +12,14 @@ class Server_tests:
         self.data_pool = data_pool
 
     @uamethod
-    async def random_sort(self, parent, data_size, data_range):
+    async def random_sort(self, parent, data_size, data_range_min, data_range_max):
         temp_data_pool = list()
 
         start_sequence_time = time.time()
 
         for _ in range(data_size):
-            temp_data_pool.append(random.randint(1, data_range))
+            temp_data_pool.append(round(random.uniform(
+                data_range_min, data_range_max), 5))
 
         end_sequence_time = time.time()
 
@@ -75,8 +76,8 @@ async def init_server():
             namespace,
             "random_sort",
             server_tests.random_sort,
-            [ua.VariantType.Int64, ua.VariantType.Int64],
-            [ua.VariantType.Int64]
+            [ua.VariantType.Int64, ua.VariantType.Float, ua.VariantType.Float],
+            [ua.VariantType.Float]
         )
 
         await server.start()
