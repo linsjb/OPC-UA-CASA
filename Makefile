@@ -1,6 +1,6 @@
 SERVER_CONTAINER_NAME := opc-server
 SERVER_FILE_SOURCE := ${CURDIR}/server/src
-SERVER_FILE_TARGET := opc-server
+SERVER_FILE_TARGET := /usr/opc/src
 SERVER_IMAGE_NAME := freeopcua_debian_server
 
 CLIENT_CONTAINER_NAME := opc-client
