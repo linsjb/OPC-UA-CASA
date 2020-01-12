@@ -139,15 +139,17 @@ def plot_server(server_data):
         plot_data['seq'].append(float(data_block['data']['seq']))
         plot_data['sort'].append(float(data_block['data']['sort']))
 
+    print(plot_data)
     plt.xticks(np.arange(len(plot_data)),
                plot_data['systems'])
 
+    data = []
     # Create bottom bars
-    plt.bar(np.arange(len(plot_data)), plot_data['seq'], color='#FF5252', edgecolor='#424242',
+    plt.bar(np.arange(len(plot_data['seq'])), plot_data['seq'], color='#FF5252', edgecolor='#424242',
             width=barWidth, label='Number generation')
 
     # Create top bar on top of the bottom one
-    plt.bar(np.arange(len(plot_data)), plot_data['sort'], bottom=plot_data['seq'], color='#536DFE',
+    plt.bar(np.arange(len(plot_data['seq'])), plot_data['sort'], bottom=plot_data['seq'], color='#536DFE',
             edgecolor='#424242', width=barWidth, label='Sort operation')
 
     plt.legend()
