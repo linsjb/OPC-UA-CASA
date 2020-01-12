@@ -9,7 +9,7 @@ CLIENT_FILE_TARGET := opc-client
 CLIENT_IMG := {$SERVER_IMAGE_NAME}
 
 build-server-image:
-	docker build -t ${SERVER_IMAGE_NAME} .
+	docker build -t ${SERVER_IMAGE_NAME} -f ./server .
 
 build-server-container:
 	@docker run -it -d \
