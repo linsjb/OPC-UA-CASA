@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
     zsh \
     wget \
     git \
+    texlive-latex-base \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
     apt-utils
 
 COPY python-requirements.txt ./

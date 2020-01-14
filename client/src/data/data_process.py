@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import csv
+import matplotlib
 
 
 DECIMAL_PLACES = 2
@@ -86,7 +87,7 @@ def server_type_average(server_data):
     return server_avg_data
 
 
-def plot_client():
+def plot_client(graph_filetype):
     plt.close()
     colors = ['#2d7f5e', '#78909C', '#FF7043', '#D32F2F', '#1E88E5', '#8E24AA']
 
@@ -114,14 +115,14 @@ def plot_client():
     plt.autoscale(False)
     plt.margins(0.5)
     plt.subplots_adjust(bottom=0.2)
-    plt.legend()
-    plt.xticks(rotation=45)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=3)
     plot.set_xlim(xmin=min(x_values))
 
-    plt.savefig(FILE_LOCATION + 'client_plot.png')
+    plt.tight_layout()
+    plt.savefig(FILE_LOCATION + 'client_plot.' + graph_filetype)
 
 
-def plot_server(server_data):
+def plot_server(server_data, graph_filetype):
     plt.close()
 
     barWidth = 1
@@ -130,7 +131,7 @@ def plot_server(server_data):
         "seq": list(),
         "sort": list()
     }
-    plt.title('Server RTT devided by action')
+    plt.title('OPC-UA Server RTT devided by action')
     plt.ylabel('RTT (%)')
     plt.xlabel('Systems')
 
@@ -142,7 +143,6 @@ def plot_server(server_data):
     plt.xticks(np.arange(len(plot_data)),
                plot_data['systems'])
 
-    data = []
     # Create bottom bars
     plt.bar(np.arange(len(plot_data['seq'])), plot_data['seq'], color='#FF5252', edgecolor='#424242',
             width=barWidth, label='Number generation')
@@ -151,8 +151,60 @@ def plot_server(server_data):
     plt.bar(np.arange(len(plot_data['seq'])), plot_data['sort'], bottom=plot_data['seq'], color='#536DFE',
             edgecolor='#424242', width=barWidth, label='Sort operation')
 
-    plt.legend()
-    plt.savefig(FILE_LOCATION + 'server_plot.png')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=2)
+    plt.subplots_adjust(bottom=0.2)
+    plt.tight_layout()
+    plt.savefig(FILE_LOCATION + 'server_plot.' + graph_filetype)
+
+
+def server_individual_plot(graph_filetype):
+    plt.close()
+    f, plot = plt.subplots(1)
+
+    for index, data_block in enumerate(server_data):
+        plt.close()
+        y_values = {
+            "seq": list(),
+            "sort": list()
+        }
+        y_sort_values = list()
+        x_values = list()
+
+        for data_set in data_block['data']:
+            x_values.append(int(data_set['size']))
+            y_values['seq'].append(data_set['time']['seq'])
+            y_values['sort'].append(data_set['time']['sort'])
+
+        plt.plot(
+            x_values,
+            y_values['seq'],
+            marker='o',
+            linewidth=2,
+            label='Random operation',
+            color='#FF5252'
+        )
+
+        plt.plot(
+            x_values,
+            y_values['sort'],
+            marker='o',
+            linewidth=2,
+            label='Sort operation',
+            color='#536DFE'
+        )
+
+        plt.title('OPC-UA Server RTT devided per task on ' +
+                  data_block['server'])
+        plt.xlabel('Data size')
+        plt.ylabel('RTT/task (ms)')
+        plt.grid(True)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=3)
+        plot.set_xlim(xmin=min(x_values))
+
+        plt.autoscale(False)
+        plt.tight_layout()
+        plt.savefig(FILE_LOCATION +
+                    data_block['server'] + '_server_individual_plot.' + graph_filetype)
 
 
 def server_table():
@@ -174,7 +226,21 @@ def server_table():
                 ])
 
 
-def compile_result():
-    plot_server(server_type_average(server_data))
-    plot_client()
+def compile_result(graph_filetypes):
+
+    server_average = server_type_average(server_data)
     server_table()
+
+    for filetype in graph_filetypes:
+        if filetype == "pgf":
+            matplotlib.use("pgf")
+            matplotlib.rcParams.update({
+                "pgf.texsystem": "pdflatex",
+                'font.family': 'serif',
+                'text.usetex': True,
+                'pgf.rcfonts': False,
+            })
+
+        plot_server(server_average, filetype)
+        plot_client(filetype)
+        server_individual_plot(filetype)

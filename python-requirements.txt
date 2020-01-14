@@ -1,3 +1,4 @@
 asyncua
 matplotlib
 pyyaml
+matplotlib

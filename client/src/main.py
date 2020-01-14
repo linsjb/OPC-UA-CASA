@@ -102,7 +102,7 @@ async def init_server():
 
             await server_method_call(args)
 
-    data_process.compile_result()
+    data_process.compile_result(config['graph_filetypes'])
 
 
 if __name__ == '__main__':

@@ -9,5 +9,11 @@ servers:
   # Single value for data range.
   # This is the range the generation of the random
   # numbers that will fill the array
-  data_range: 
+  data_range:
+    - min value
+    - max value
+  
+# In which format will the graphs be saved?
+# pgf needs to go last!
+graph_filetypes:
   
