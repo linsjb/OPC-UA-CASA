@@ -1,4 +1,0 @@
-Data size,List generation,List sort
-10000,33.05 ms,4.25 ms
-20000,66.63 ms,4.18 ms
-30000,68.78 ms,7.78 ms

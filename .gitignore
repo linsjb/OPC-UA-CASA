@@ -7,4 +7,3 @@ __pycache__
 *.swp
 configuration.yml
 *.out
-generated_files
