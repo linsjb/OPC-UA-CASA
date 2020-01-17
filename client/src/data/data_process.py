@@ -13,6 +13,8 @@ client_data = list()
 server_data = list()
 server_mena_data = list()
 
+plt.style.use('plot_style.mplstyle')
+
 
 def new_server(server):
     client_data.append({
@@ -114,8 +116,8 @@ def plot_client(graph_filetype):
     plt.grid(True)
     plt.autoscale(False)
     plt.margins(0.5)
-    plt.subplots_adjust(bottom=0.2)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=3)
+
+    plt.legend()
     plot.set_xlim(xmin=min(x_values))
 
     plt.tight_layout()
@@ -132,7 +134,7 @@ def plot_server(server_data, graph_filetype):
         "sort": list()
     }
     plt.title('OPC-UA Server RTT devided by action')
-    plt.ylabel('RTT (%)')
+    plt.ylabel('Process time (%)')
     plt.xlabel('Systems')
 
     for data_block in server_data:
@@ -152,7 +154,6 @@ def plot_server(server_data, graph_filetype):
             edgecolor='#424242', width=barWidth, label='Sort operation')
 
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=2)
-    plt.subplots_adjust(bottom=0.2)
     plt.tight_layout()
     plt.savefig(FILE_LOCATION + 'server_plot.' + graph_filetype)
 
